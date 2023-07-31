@@ -73,7 +73,64 @@ local Session = {}
 local function json_decode(payload)
   return vim.json.decode(payload, { luanil = { object = true }})
 end
-local json_encode = vim.json.encode
+
+function json_encode(obj)
+  local type_of = type(obj)
+  if type_of == 'number' then
+    return encode_number(obj)
+  elseif type_of == 'nil' then
+    return 'null'
+  elseif type_of == 'table' then
+    str = '{'
+    -- first walk to disambiguate array vs map/obj
+    for k, v in pairs(obj) do
+      local type_of = type(k)
+      if type_of == 'number' then
+        return encode_array(obj)
+      elseif type_of == 'string' then
+        return encode_obj(obj)
+      else
+        error('expected key of table to be either string or number, got ' .. type_of)
+      end
+    end
+  elseif type_of == 'string' then
+    return '"' .. vim.json.encode(obj) .. '"'
+  else
+    error('unhandled type ' .. type_of)
+  end
+  return str
+end
+
+function encode_number(num)
+  if math.floor(num) == num then
+    return string.format("%.0f", num)
+  end
+  return tostring(num)
+end
+
+function encode_array(arr)
+  local elements = {}
+
+  for k, v in pairs(arr) do
+    assert(type(k) == 'number', 'expected key to be number, got ' .. k .. ' in ' .. tostring(arr))
+    table.insert(elements, json_encode(v))
+  end
+
+  return '[' .. table.concat(elements, ',') .. ']'
+end
+
+function encode_obj(obj)
+  local entries = {}
+
+  for k, v in pairs(obj) do
+    assert(type(k) == 'string', 'expected key to be string, got ' .. k .. ' in ' .. tostring(obj))
+    table.insert(entries, '"' .. k .. '":' .. json_encode(v))
+  end
+
+  return '{' .. table.concat(entries, ',') .. '}'
+end
+
+
 local function send_payload(client, payload)
   local msg = rpc.msg_with_content_length(json_encode(payload))
   client.write(msg)
