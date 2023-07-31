@@ -81,7 +81,6 @@ function json_encode(obj)
   elseif type_of == 'nil' then
     return 'null'
   elseif type_of == 'table' then
-    str = '{'
     -- first walk to disambiguate array vs map/obj
     for k, v in pairs(obj) do
       local type_of = type(k)
@@ -97,14 +96,13 @@ function json_encode(obj)
     return vim.json.encode(obj)
   elseif type_of == 'boolean' then
     return tostring(obj)
-  else
-    error('unhandled type ' .. type_of)
   end
-  return str
+  error('unhandled type ' .. type_of)
 end
 
 function encode_number(num)
   if math.floor(num) == num then
+    -- ensure large integers are serialized correctly
     return string.format("%.0f", num)
   end
   return tostring(num)
