@@ -94,7 +94,7 @@ function json_encode(obj)
       end
     end
   elseif type_of == 'string' then
-    return '"' .. vim.json.encode(obj) .. '"'
+    return vim.json.encode(obj)
   elseif type_of == 'boolean' then
     return tostring(obj)
   else
