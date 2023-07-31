@@ -95,6 +95,8 @@ function json_encode(obj)
     end
   elseif type_of == 'string' then
     return '"' .. vim.json.encode(obj) .. '"'
+  elseif type_of == 'boolean' then
+    return tostring(obj)
   else
     error('unhandled type ' .. type_of)
   end
